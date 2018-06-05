@@ -45,12 +45,12 @@ public protocol ChromaShadeSliderDelegate {
 }
 
 open class ChromaShadeSlider: UIControl {
-    open var currentValue: CGFloat = 0.0 //range of {-1,1}
+    open var currentValue: CGFloat = -1 //range of {-1,1}
     
     open let trackLayer = ChromaSliderTrackLayer()
     open let handleView = ChromaHandle()
     open var handleWidth: CGFloat{ return self.bounds.height }
-    open var handleCenterX: CGFloat = 0.0
+    open var handleCenterX: CGFloat = 1.0
     open var delegate: ChromaShadeSliderDelegate?
     
     open var primaryColor = UIColor.gray{
@@ -62,12 +62,18 @@ open class ChromaShadeSlider: UIControl {
     /* The computed color of the primary color with shading based on the currentValue */
     open var currentColor: UIColor{
         get{
-            if currentValue < 0 {//darken
-                return primaryColor.darkerColor(-currentValue)
+//            if currentValue < 0 {//darken
+            if currentValue < 0 {
+                let val = (currentValue + 1)/4
+                return primaryColor.darkerColor(val)
+            } else {
+                let val = ((currentValue + 1)/4 + 0.5)
+                return primaryColor.darkerColor(val)
             }
-            else{ //lighten
-                return primaryColor.lighterColor(currentValue)
-            }
+            
+//            } else { //lighten
+//                return primaryColor.lighterColor(currentValue)
+//            }
         }
     }
     
@@ -119,7 +125,7 @@ open class ChromaShadeSlider: UIControl {
     
     //Lays out handle according to the currentValue on slider
     open func layoutHandleFrame(){
-        handleView.frame = CGRect(x: handleCenterX - handleWidth/2, y: self.bounds.height/2 - handleWidth/2, width: handleWidth, height: handleWidth)
+        handleView.frame = CGRect(x: handleCenterX - handleWidth/2, y: self.bounds.height/2 - handleWidth/2, width: handleWidth * 0.9, height: handleWidth)
     }
     
     open func changeColorHue(to newColor: UIColor){
@@ -182,7 +188,7 @@ open class ChromaShadeSlider: UIControl {
         self.sendActions(for: .editingDidEnd)
     }
     
-  @objc func doubleTapRecognized(_ recognizer: UITapGestureRecognizer){
+    func doubleTapRecognized(_ recognizer: UITapGestureRecognizer){
         let location = recognizer.location(in: self)
         guard handleView.frame.contains(location) else {
             return

@@ -36,6 +36,11 @@ open class ChromaColorPicker: UIControl {
     open var handleLine: CAShapeLayer!
     open var addButton: ChromaAddButton!
     open var colorToggleButton: ColorModeToggleButton!
+    open var colorChanged: ((UIColor) -> Void)?
+    open var significant: Bool = true
+    
+    private var recordedAngle: Float = 0
+
     
     private var modeIsGrayscale: Bool {
         return colorToggleButton.colorState == .grayscale
@@ -58,6 +63,19 @@ open class ChromaColorPicker: UIControl {
     }
     open var delegate: ChromaColorPickerDelegate?
     open var currentAngle: Float = 0
+    func changeColor(force: Bool = false) {
+        let diff = currentAngle - recordedAngle
+        if significant, diff >= 0.01 || diff <= -0.01 {
+            recordedAngle = currentAngle
+            colorChanged?(currentColor)
+        } else if !significant {
+            colorChanged?(currentColor)
+        } else if force {
+            colorChanged?(currentColor)
+        }
+    }
+    
+    
     open private(set) var radius: CGFloat = 0
     open var stroke: CGFloat = 1
     open var padding: CGFloat = 15
@@ -158,17 +176,15 @@ open class ChromaColorPicker: UIControl {
         /* Update the angle and currentColor */
         currentAngle = angleForColor(newColor)
         currentColor = newColor
-        if brightness < 1.0 && saturation < 1.0 {
-            /* Modifies the Shade Slider to handle adjusting to colors outside of the Chroma scope */
-            shadeSlider.primaryColor = UIColor(hue: hue, saturation: saturation, brightness: brightness, alpha: 1)
-            shadeSlider.currentValue = 0
-        } else if brightness < 1.0 { //currentValue is on the left side of the slider
+        
+        if brightness < 1.0 { //currentValue is on the left side of the slider
             shadeSlider.currentValue = brightness-1
-        }else{
+        }
+        else{
             shadeSlider.currentValue = -(saturation-1)
         }
         shadeSlider.updateHandleLocation() //update the handle location now that the value is set
-        addButton.color = newColor
+        addButton.color = shadeSlider.currentColor
         
         /* Will layout based on new angle */
         self.layoutHandle()
@@ -198,7 +214,7 @@ open class ChromaColorPicker: UIControl {
         }
     }
     
-  @objc func handleWasMoved(_ recognizer: UIPanGestureRecognizer) {
+    func handleWasMoved(_ recognizer: UIPanGestureRecognizer) {
         switch(recognizer.state){
 
         case UIGestureRecognizerState.changed:
@@ -251,7 +267,7 @@ open class ChromaColorPicker: UIControl {
         self.updateHexLabel()
     }
     
-  @objc func addButtonPressed(_ sender: ChromaAddButton){
+    func addButtonPressed(_ sender: ChromaAddButton){
         //Do a 'bob' animation
         UIView.animate(withDuration: 0.2,
                 delay: 0,
@@ -267,7 +283,7 @@ open class ChromaColorPicker: UIControl {
         delegate?.colorPickerDidChooseColor(self, color: sender.color) //Delegate call
     }
     
-  @objc func sliderEditingDidEnd(_ sender: ChromaShadeSlider){
+    func sliderEditingDidEnd(_ sender: ChromaShadeSlider){
         self.sendActions(for: .editingDidEnd)
     }
     
@@ -405,7 +421,7 @@ open class ChromaColorPicker: UIControl {
 
         let sliderSize = CGSize(width: deltaX * 0.75, height: 0.08 * (bounds.height - padding*2))//bounds.height
         shadeSlider.frame = CGRect(x: bounds.midX - sliderSize.width/2, y: pointLeft.y - sliderSize.height/2, width: sliderSize.width, height: sliderSize.height)
-        shadeSlider.handleCenterX = shadeSlider.bounds.width/2 //set handle starting position
+        shadeSlider.handleCenterX = shadeSlider.bounds.width //set handle starting position
         shadeSlider.layoutLayerFrames() //call sliders' layout function
     }
     
@@ -420,15 +436,17 @@ open class ChromaColorPicker: UIControl {
     
     func updateHexLabel(){
         hexLabel.text = "#" + currentColor.hexCode
+        changeColor()
     }
     
     func updateCurrentColor(_ color: UIColor){
         currentColor = color
         addButton.color = color
         self.sendActions(for: .valueChanged)
+        changeColor()
     }
     
-  @objc open func togglePickerColorMode() {
+    open func togglePickerColorMode() {
         colorToggleButton.isEnabled = false // Lock
         
         // Redraw Assets (i.e. Large circle ring)
@@ -516,5 +534,6 @@ extension ChromaColorPicker: ChromaShadeSliderDelegate{
     public func shadeSliderChoseColor(_ slider: ChromaShadeSlider, color: UIColor) {
         self.updateCurrentColor(color) //update main controller for selected color
         self.updateHexLabel()
+        self.changeColor(force: true)
     }
 }
