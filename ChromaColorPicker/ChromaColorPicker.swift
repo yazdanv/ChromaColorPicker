@@ -214,7 +214,7 @@ open class ChromaColorPicker: UIControl {
         }
     }
     
-    func handleWasMoved(_ recognizer: UIPanGestureRecognizer) {
+    @objc func handleWasMoved(_ recognizer: UIPanGestureRecognizer) {
         switch(recognizer.state){
 
         case UIGestureRecognizerState.changed:
@@ -267,7 +267,7 @@ open class ChromaColorPicker: UIControl {
         self.updateHexLabel()
     }
     
-    func addButtonPressed(_ sender: ChromaAddButton){
+    @objc func addButtonPressed(_ sender: ChromaAddButton){
         //Do a 'bob' animation
         UIView.animate(withDuration: 0.2,
                 delay: 0,
@@ -283,7 +283,7 @@ open class ChromaColorPicker: UIControl {
         delegate?.colorPickerDidChooseColor(self, color: sender.color) //Delegate call
     }
     
-    func sliderEditingDidEnd(_ sender: ChromaShadeSlider){
+    @objc func sliderEditingDidEnd(_ sender: ChromaShadeSlider){
         self.sendActions(for: .editingDidEnd)
     }
     
@@ -446,7 +446,7 @@ open class ChromaColorPicker: UIControl {
         changeColor()
     }
     
-    open func togglePickerColorMode() {
+    @objc open func togglePickerColorMode() {
         colorToggleButton.isEnabled = false // Lock
         
         // Redraw Assets (i.e. Large circle ring)

@@ -188,7 +188,7 @@ open class ChromaShadeSlider: UIControl {
         self.sendActions(for: .editingDidEnd)
     }
     
-    func doubleTapRecognized(_ recognizer: UITapGestureRecognizer){
+    @objc func doubleTapRecognized(_ recognizer: UITapGestureRecognizer){
         let location = recognizer.location(in: self)
         guard handleView.frame.contains(location) else {
             return
